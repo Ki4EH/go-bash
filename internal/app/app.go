@@ -20,6 +20,7 @@ type App struct {
 	Router *mux.Router
 }
 
+// Run SetupRoutes sets up the routes for the application
 func Run(cfg *config.Config) (*App, error) {
 	logger.Info("starting http server...")
 
@@ -45,6 +46,7 @@ func Run(cfg *config.Config) (*App, error) {
 	return srv, nil
 }
 
+// ConnectionToDB connects to the database and sets the connection to the App
 func ConnectionToDB(srv *App, dbStruct config.Database) error {
 	logger.Info("connecting to db...")
 	connStr := fmt.Sprintf("host=%s port=%d user=%s "+
@@ -57,6 +59,7 @@ func ConnectionToDB(srv *App, dbStruct config.Database) error {
 	}
 	err = db.Ping()
 	if err != nil {
+		fmt.Println("Error on ping db")
 		return err
 	}
 
@@ -65,6 +68,7 @@ func ConnectionToDB(srv *App, dbStruct config.Database) error {
 	return nil
 }
 
+// Stop stops the server
 func (a *App) stop(ctx context.Context) error {
 	logger.Info("shutdown server...")
 	err := a.server.Shutdown(ctx)
@@ -75,6 +79,7 @@ func (a *App) stop(ctx context.Context) error {
 	return nil
 }
 
+// GracefulStop stops the server gracefully
 func (a *App) GracefulStop(serverCtx context.Context, sig <-chan os.Signal, serverStopCtx context.CancelFunc) {
 	<-sig
 	var timeOut = 30 * time.Second

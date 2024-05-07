@@ -14,6 +14,7 @@ var (
 	errorLog *log.Logger
 )
 
+// init creates a log file in the logs directory
 func init() {
 	output, err := OutPutFile()
 	if err != nil {
@@ -25,11 +26,11 @@ func init() {
 
 }
 
-// OutPutFile Создаю директорию для логов и лог файл на текущий день
+// OutPutFile creates a log file in the logs directory and returns a file pointer to it
 func OutPutFile() (*os.File, error) {
 	dir, _ := os.Getwd()
 	logDir := filepath.Join(dir, "logs")
-
+	// check if the logs directory exists
 	if _, err := os.Stat(logDir); os.IsNotExist(err) {
 		err = os.Mkdir(logDir, os.ModeDir)
 		if err != nil {
@@ -37,7 +38,7 @@ func OutPutFile() (*os.File, error) {
 
 		}
 	}
-
+	// create a log file with the current date
 	today := time.Now().Format("2006-01-02")
 	filePath := filepath.Join(logDir, today+".log")
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
@@ -62,6 +63,7 @@ func Fatal(v ...interface{}) {
 	os.Exit(1)
 }
 
+// getFileAndLine returns the file and line number of the caller of the function that calls it
 func getFileAndLine(skip int) (string, int) {
 	_, file, line, ok := runtime.Caller(skip)
 	if !ok {

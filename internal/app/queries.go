@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/Ki4EH/go-bash/internal/logger"
 	"os/exec"
-	"strings"
 )
 
 type Table struct {
@@ -21,14 +20,15 @@ type CommandSmallInfo struct {
 	Name string
 }
 
+// AllCommands returns all commands from the database
 func (a *App) AllCommands() ([]CommandSmallInfo, error) {
-	var alldata []CommandSmallInfo
+	logger.Info("Fetching all commands...")
 	rows, err := a.Db.Query(`SELECT id, name from Commands`)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-
+	var alldata []CommandSmallInfo
 	for rows.Next() {
 		var data CommandSmallInfo
 		err := rows.Scan(&data.Id, &data.Name)
@@ -37,79 +37,87 @@ func (a *App) AllCommands() ([]CommandSmallInfo, error) {
 		}
 		alldata = append(alldata, data)
 	}
-
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	if alldata == nil {
-		err := fmt.Errorf("no rows in database")
-		return nil, err
-	}
-
-	return alldata, nil
+	return alldata, rows.Err()
 }
 
-func RunCommand(script string) (string, error) {
+// RunCommand runs a bash script and returns the output or an error doing this asynchronously
+func RunCommand(script string, out chan<- string, errChan chan<- error) {
+	logger.Info("Running command: %s\n", script)
 	cmd := exec.Command("bash", "-c", script)
-	var out bytes.Buffer
-	cmd.Stdout = &out
+	var outBuf bytes.Buffer
+	cmd.Stdout = &outBuf
+	var errBuf bytes.Buffer
+	cmd.Stderr = &errBuf
 	err := cmd.Run()
 	if err != nil {
-		return "", err
+		logger.Error(fmt.Sprintf("Command %s error: %s, command output: %s", script, err, outBuf.String()))
+		errChan <- fmt.Errorf("error running command: %s", errBuf.String())
+		return
 	}
-	return out.String(), nil
+	out <- outBuf.String()
 }
 
+// AlreadyExist checks if a command already exists in the database
 func (a *App) AlreadyExist(data *Table) bool {
+	logger.Info(fmt.Sprintf("Checking if command %s already exists...", data.Name))
 	query := fmt.Sprintf(`SELECT COUNT(*) FROM "commands" WHERE name=$1`)
-	var ct int64
+	var ct int
 	_ = a.Db.QueryRow(query, data.Name).Scan(&ct)
 	if ct > 0 {
-		return false
+		logger.Info(fmt.Sprintf("Command %s already exists", data.Name))
+		return true
 	}
-	return true
+	logger.Info(fmt.Sprintf("Command %s does not exist", data.Name))
+	return false
 }
 
+// InsertCommand inserts a command into the database and runs it
 func (a *App) InsertCommand(data *Table) error {
-	if a.AlreadyExist(data) == false {
-		return fmt.Errorf("command already exist")
+	if a.AlreadyExist(data) == true {
+		return fmt.Errorf("command already exists")
 	}
-	out, err := RunCommand(data.Script)
-	if err != nil {
-		return fmt.Errorf("error on run command %w", err)
-	}
-	query := fmt.Sprintf(`INSERT INTO "commands" (name, script, description, output) VALUES ($1, $2, $3, $4)`)
+	outChan := make(chan string)
+	errChan := make(chan error)
+	go RunCommand(data.Script, outChan, errChan)
 
-	_, err = a.Db.Exec(query, data.Name, data.Script, data.Description, out)
-	if err != nil {
-		return fmt.Errorf("error on insert command %w", err)
+	select {
+	case out := <-outChan:
+		logger.Info(fmt.Sprintf("Command %s output: %s", data.Name, out))
+		query := fmt.Sprintf(`INSERT INTO "commands" (name, script, description, output) VALUES ($1, $2, $3, $4)`)
+		_, err := a.Db.Exec(query, data.Name, data.Script, data.Description, out)
+		if err != nil {
+			return fmt.Errorf("error on insert command: %s", err)
+		}
+	case err := <-errChan:
+		return fmt.Errorf("error on run command: %s", err)
 	}
+
 	return nil
 }
 
+// Remove removes a command or multiple commands from the database
 func (a *App) Remove(param string) error {
-	strSlice := strings.Split(param, ",")
-	query := fmt.Sprintf(`DELETE FROM "commands" WHERE id IN(%s)`, strings.Join(strSlice, ","))
-	result, err := a.Db.Exec(query)
+	query := fmt.Sprintf(`DELETE FROM "commands" WHERE id IN(%s)`, param)
+	_, err := a.Db.Exec(query)
 	if err != nil {
 		return fmt.Errorf("error on deleting %w", err)
 	}
-	rowAffected, _ := result.RowsAffected()
-	logger.Info("rows affected after deleting", rowAffected)
 	return nil
 }
 
+// InfoCommand returns a command by id or list of commands by ids
 func (a *App) InfoCommand(param string) ([]Table, error) {
-	strSlice := strings.Split(param, ",")
-	query := fmt.Sprintf(`SELECT * FROM "commands" WHERE id IN(%s)`, strings.Join(strSlice, ","))
+	logger.Info(fmt.Sprintf("Getting info about command with id %s", param))
+	query := fmt.Sprintf(`SELECT * FROM "commands" WHERE id IN(%s)`, param)
 	rows, err := a.Db.Query(query)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 	var commandsInfo []Table
 	for rows.Next() {
 		var data Table
+		// scan the data from the row into the data struct
 		err := rows.Scan(&data.Id, &data.Name, &data.Script, &data.Description, &data.Output)
 		if err != nil {
 			return nil, err

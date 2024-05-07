@@ -21,7 +21,7 @@ type Database struct {
 }
 
 type HTTPServer struct {
-	Address     string        `env:"HTTP_SERVER_ADDRESS" env-default:":8082"`
+	Address     string        `env:"HTTP_SERVER_ADDRESS" env-default:":8080"`
 	Timeout     time.Duration `env:"HTTP_SERVER_TIMEOUT" env-default:"2s"`
 	IdleTimeout time.Duration `env:"HTTP_SERVER_IDLE_TIMEOUT" env-default:"60s"`
 }

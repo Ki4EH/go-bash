@@ -8,35 +8,38 @@ import (
 	"net/http"
 )
 
+// InfoAll returns all commands
 func (a *App) InfoAll(w http.ResponseWriter, r *http.Request) {
 	commands, err := a.AllCommands()
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger.Error("error GET request: ", err)
+		logger.Error("error on get all commands ", err)
 		return
 	}
 	jsonCommands, err := json.Marshal(commands)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		logger.Error("error marshalling json: ", err)
+		logger.Error("error on marshalling all commands ", err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonCommands)
 }
 
+// NewCommand creates a new command in the database
 func (a *App) NewCommand(w http.ResponseWriter, r *http.Request) {
 	var command *Table
 	json.NewDecoder(r.Body).Decode(&command)
 	if err := a.InsertCommand(command); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		w.Write([]byte(fmt.Sprint(err)))
-		logger.Error("error inserting command ", err)
+		logger.Error(err)
 		return
 	}
 	w.WriteHeader(http.StatusOK)
 }
 
+// RemoveCommand removes a command or multiple commands from the database
 func (a *App) RemoveCommand(w http.ResponseWriter, r *http.Request) {
 	params := r.URL.Query().Get("id")
 	if err := a.Remove(params); err != nil {
@@ -47,6 +50,7 @@ func (a *App) RemoveCommand(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// InfoCommands returns a command by id or list of commands by ids
 func (a *App) InfoCommands(w http.ResponseWriter, r *http.Request) {
 	param := r.URL.Query().Get("id")
 	result, err := a.InfoCommand(param)
