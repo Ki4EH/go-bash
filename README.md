@@ -85,7 +85,7 @@ Before you start, make sure you have Docker and Docker Compose installed on your
 ```bash
 cd /path/to/your/project
 ```
-2. Change in `.env` `POSTGRES_HOST=` to `POSTGRES_HOST=db` for saving data in the database.
+2. Change in `.env` `POSTGRES_HOST=` to `POSTGRES_HOST=db` for saving data in the database container.
 
 3. Change ports in `docker-compose.yml` on your own if you need to use another port for the application or database
 
