@@ -38,7 +38,10 @@ To get a local copy up and running, follow these simple steps.
 
 ### Installation
 
-1. Clone the repo
+1. Clone the repo 
+    ```sh
+    git clone https://github.com/Ki4EH/go-bash.git
+    ```
 2. Install Go packages
    ```sh
    go mod download
@@ -53,6 +56,10 @@ To get a local copy up and running, follow these simple steps.
     "output" TEXT NOT NULL
    );
    ```
+   Or you can use init.sql file in the root directory to create the table.
+   ```sh
+    psql -U your_db_user -d your_db_name -a -f init.sql
+    ```
 4. Create a `.env` file in the root directory and add the following environment variables
    ```env
    POSTGRES_USER=your_db_user
@@ -78,9 +85,10 @@ Before you start, make sure you have Docker and Docker Compose installed on your
 ```bash
 cd /path/to/your/project
 ```
-2. Change in `.env` `POSTGRES_HOST=` to `POSTGRES_HOST=db` for save data in volume
+2. Change in `.env` `POSTGRES_HOST=` to `POSTGRES_HOST=db` for saving data in the database.
 
-3. Change ports in `docker-compose.yml` if you need
+3. Change ports in `docker-compose.yml` on your own if you need to use another port for the application or database
+
 
 4. Build the Docker image.
 
@@ -138,5 +146,5 @@ docker-compose up
 8. 🛡️ Add protection from SQL Injection Attacks and other security vulnerabilities.
 # Contact
 
-## Kirill Aksenov - [Poka132@yandex.ru](mailto:Poka132@yandex.ru) 
-## Telegram - [@ki4eh](https://t.me/ki4eh)
+#### Kirill Aksenov - [Poka132@yandex.ru](mailto:Poka132@yandex.ru) 
+#### Telegram - [@ki4eh](https://t.me/ki4eh)
