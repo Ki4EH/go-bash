@@ -88,6 +88,7 @@ func (a *App) InsertCommand(data *Table) error {
 		if err != nil {
 			return fmt.Errorf("error on insert command: %s", err)
 		}
+		logger.Info(fmt.Sprintf("Command %s inserted", data.Name))
 	case err := <-errChan:
 		return fmt.Errorf("error on run command: %s", err)
 	}
@@ -97,6 +98,7 @@ func (a *App) InsertCommand(data *Table) error {
 
 // Remove removes a command or multiple commands from the database
 func (a *App) Remove(param string) error {
+	logger.Info(fmt.Sprintf("Removing command with id %s", param))
 	query := fmt.Sprintf(`DELETE FROM "commands" WHERE id IN(%s)`, param)
 	_, err := a.Db.Exec(query)
 	if err != nil {
