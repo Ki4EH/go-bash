@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+// TestQueries tests the queries in the app package
 func TestQueries(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	app := &App{Db: db}
@@ -18,6 +19,7 @@ func TestQueries(t *testing.T) {
 		testFunc func() error
 	}{
 		{
+			// AllCommandsReturnsCommandsWhenPresent tests that AllCommands returns all commands from the database
 			name: "AllCommandsReturnsCommandsWhenPresent",
 			mock: func() {
 				rows := sqlmock.NewRows([]string{"id", "name"}).
@@ -38,6 +40,7 @@ func TestQueries(t *testing.T) {
 			},
 		},
 		{
+			// AllCommandsReturnsErrorWhenQueryFails tests that AllCommands returns an error when the query fails
 			name: "AllCommandsReturnsErrorWhenQueryFails",
 			mock: func() {
 				mock.ExpectQuery(`SELECT id, name from Commands`).WillReturnError(sql.ErrNoRows)
@@ -49,6 +52,7 @@ func TestQueries(t *testing.T) {
 			},
 		},
 		{
+			// AlreadyExistReturnsTrueWhenCommandExists tests that AlreadyExist returns true when the command exists
 			name: "AlreadyExistReturnsFalseWhenCommandDoesNotExist",
 			mock: func() {
 				mock.ExpectQuery(`SELECT COUNT(*) FROM "commands" WHERE name=$1`).WithArgs("nonExistingCommand").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(0))
@@ -63,6 +67,7 @@ func TestQueries(t *testing.T) {
 			},
 		},
 		{
+			// AlreadyExistReturnsFalseWhenCommandDoesNotExist tests that AlreadyExist returns false when the command does not exist
 			name: "InsertCommandReturnsErrorWhenCommandExists",
 			mock: func() {
 				mock.ExpectQuery(`SELECT COUNT(*) FROM "commands" WHERE name=$1`).WithArgs("existingCommand").WillReturnRows(sqlmock.NewRows([]string{"count"}).AddRow(1))
