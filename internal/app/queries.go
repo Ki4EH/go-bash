@@ -42,7 +42,7 @@ func (a *App) AllCommands() ([]CommandSmallInfo, error) {
 
 // RunCommand runs a bash script and returns the output or an error doing this asynchronously
 func RunCommand(script string, out chan<- string, errChan chan<- error) {
-	logger.Info("Running command: %s\n", script)
+	logger.Info(fmt.Sprintf("Running command: %s\n", script))
 	cmd := exec.Command("bash", "-c", script)
 	var outBuf bytes.Buffer
 	cmd.Stdout = &outBuf

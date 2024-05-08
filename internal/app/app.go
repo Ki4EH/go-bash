@@ -59,7 +59,6 @@ func ConnectionToDB(srv *App, dbStruct config.Database) error {
 	}
 	err = db.Ping()
 	if err != nil {
-		fmt.Println("Error on ping db")
 		return err
 	}
 

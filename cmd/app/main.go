@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"github.com/Ki4EH/go-bash/internal/app"
 	"github.com/Ki4EH/go-bash/internal/config"
 	"github.com/Ki4EH/go-bash/internal/logger"
@@ -16,14 +15,12 @@ func main() {
 	logger.Info("reading config...")
 	conf, err := config.LoadFromEnv()
 	if err != nil {
-		fmt.Println(err)
 		logger.Fatal("failed to read config, ", err)
 	}
 
 	srv, err := app.Run(conf)
 
 	if err != nil {
-		fmt.Println(err)
 		logger.Fatal(err)
 	}
 
