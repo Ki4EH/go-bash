@@ -11,7 +11,6 @@ import (
 	"syscall"
 )
 
-// main is the entry point of the application and starts the server with the given configuration from the environment
 func main() {
 	logger.Info("reading config...")
 	conf, err := config.LoadFromEnv()
@@ -31,12 +30,15 @@ func main() {
 
 	sig := make(chan os.Signal, 1)
 	// Notify the channel when a signal is received
-	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sig, syscall.SIGHUP, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT, syscall.SIGKILL)
 
+	done := make(chan struct{})
 	// Graceful shutdown of the server when a signal is received or the context is done
 	go func() {
 		srv.GracefulStop(serverCtx, sig, serverStopCtx)
+		serverStopCtx()
+		close(done)
 	}()
 
-	<-serverCtx.Done()
+	<-done
 }

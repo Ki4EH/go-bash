@@ -24,7 +24,7 @@ type App struct {
 func Run(cfg *config.Config) (*App, error) {
 	logger.Info("starting http server...")
 
-	srv := new(App)
+	srv := &App{}
 
 	srv.server = &http.Server{
 		Addr:         cfg.Address,
@@ -38,11 +38,11 @@ func Run(cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("error on connect to db %w", err)
 	}
 
-	if err := srv.server.ListenAndServe(); err != nil {
-		return nil, fmt.Errorf("error on starting server %w", err)
-	}
-
-	logger.Info("server was shutdown")
+	go func() {
+		if err := srv.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			logger.Error(fmt.Sprintf("error on starting server %v", err))
+		}
+	}()
 	return srv, nil
 }
 
@@ -69,34 +69,39 @@ func ConnectionToDB(srv *App, dbStruct config.Database) error {
 
 // Stop stops the server
 func (a *App) stop(ctx context.Context) error {
-	logger.Info("shutdown server...")
 	err := a.server.Shutdown(ctx)
 	if err != nil {
 		return fmt.Errorf("server was shutdown with error: %w", err)
 	}
-	logger.Info("server was shutdown")
 	return nil
 }
 
 // GracefulStop stops the server gracefully
 func (a *App) GracefulStop(serverCtx context.Context, sig <-chan os.Signal, serverStopCtx context.CancelFunc) {
 	<-sig
+	defer func() {
+		if r := recover(); r != nil {
+			fmt.Println("Recovered in GracefulStop", r)
+		}
+		serverStopCtx()
+	}()
+	logger.Info("Start graceful shutdown")
 	var timeOut = 30 * time.Second
 	shutdownCtx, shutdownStopCtx := context.WithTimeout(serverCtx, timeOut)
+	defer shutdownStopCtx()
 
 	go func() {
 		<-shutdownCtx.Done()
 		if errors.Is(shutdownCtx.Err(), context.DeadlineExceeded) {
 			logger.Error("graceful shutdown timed out... forcing exit")
-			os.Exit(1)
+			panic("graceful shutdown timed out... forcing exit")
 		}
 	}()
 
 	err := a.stop(shutdownCtx)
 	if err != nil {
 		logger.Error("graceful shutdown timed out... forcing exit")
-		os.Exit(1)
+		panic("graceful shutdown timed out... forcing exit")
 	}
-	defer serverStopCtx()
-	defer shutdownStopCtx()
+	logger.Info("graceful shutdown complete")
 }

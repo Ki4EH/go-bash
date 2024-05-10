@@ -68,9 +68,9 @@ To get a local copy up and running, follow these simple steps.
    POSTGRES_HOST=your_db_host
    POSTGRES_PORT=your_db_port
    ```
-5. Run the application
+5. Run the application in directory where project cloned
    ```sh
-    go run main.go
+    go run ./cmd/app/main.go
     ```
 6. The application should now be running on default `http://localhost:8080`
 7. You can now test the API using Postman or any other API testing tool
