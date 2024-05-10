@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/Ki4EH/go-bash/internal/logger"
 	"os/exec"
+	"strings"
 )
 
 type Table struct {
@@ -98,9 +99,16 @@ func (a *App) InsertCommand(data *Table) error {
 
 // Remove removes a command or multiple commands from the database
 func (a *App) Remove(param string) error {
-	logger.Info(fmt.Sprintf("Removing command with id %s", param))
-	query := fmt.Sprintf(`DELETE FROM "commands" WHERE id IN(%s)`, param)
-	_, err := a.Db.Exec(query)
+	logger.Info(fmt.Sprintf("Removing commands with ids %s", param))
+	params := strings.Split(param, ",")
+	placeholders := make([]string, len(params))
+	args := make([]interface{}, len(params))
+	for i, v := range params {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = v
+	}
+	query := fmt.Sprintf(`DELETE FROM "commands" WHERE id IN(%s)`, strings.Join(placeholders, ","))
+	_, err := a.Db.Exec(query, args...)
 	if err != nil {
 		return fmt.Errorf("error on deleting %w", err)
 	}
@@ -110,8 +118,15 @@ func (a *App) Remove(param string) error {
 // InfoCommand returns a command by id or list of commands by ids
 func (a *App) InfoCommand(param string) ([]Table, error) {
 	logger.Info(fmt.Sprintf("Getting info about command with id %s", param))
-	query := fmt.Sprintf(`SELECT * FROM "commands" WHERE id IN(%s)`, param)
-	rows, err := a.Db.Query(query)
+	params := strings.Split(param, ",")
+	placeholders := make([]string, len(params))
+	args := make([]interface{}, len(params))
+	for i, v := range params {
+		placeholders[i] = fmt.Sprintf("$%d", i+1)
+		args[i] = v
+	}
+	query := fmt.Sprintf(`SELECT * FROM "commands" WHERE id IN(%s)`, strings.Join(placeholders, ","))
+	rows, err := a.Db.Query(query, args...)
 	if err != nil {
 		return nil, err
 	}

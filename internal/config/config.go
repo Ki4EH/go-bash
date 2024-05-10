@@ -3,6 +3,8 @@ package config
 import (
 	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
+	"github.com/joho/godotenv"
+	"os"
 	"time"
 )
 
@@ -27,6 +29,8 @@ type HTTPServer struct {
 }
 
 func LoadFromEnv() (*Config, error) {
+	currDir, _ := os.Getwd()
+	godotenv.Load(fmt.Sprintf("%s/.env", currDir))
 	var cfg Config
 	if err := cleanenv.ReadEnv(&cfg); err != nil {
 		return nil, fmt.Errorf("failed to parse .env %v", err)

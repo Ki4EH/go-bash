@@ -60,6 +60,12 @@ func (a *App) InfoCommands(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if result == nil {
+		w.WriteHeader(http.StatusNotFound)
+		logger.Info("command not found with id ", param)
+		return
+	}
+
 	jsonCommand, err := json.Marshal(result)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
