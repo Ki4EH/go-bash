@@ -10,6 +10,7 @@ Topics:
   - [Installation](#installation)
 - [Docker Build and Run Guide](#docker-build-and-run-guide)
 - [API Endpoints](#api-endpoints)
+- [Contact](#contact)
 
 ## Features
 
