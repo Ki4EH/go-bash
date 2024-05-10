@@ -88,8 +88,6 @@ cd /path/to/your/project
 2. Change in `.env` `POSTGRES_HOST=` to `POSTGRES_HOST=db` for saving data in the database container.
 
 3. Change ports in `docker-compose.yml` on your own if you need to use another port for the application or database
-
-
 4. Build the Docker image.
 
 ```bash
@@ -100,6 +98,7 @@ docker-compose build
 ```bash 
 docker-compose up
 ```
+6. Now the application should be running on default `http://localhost:8082`
 
 
 ## API Endpoints
